@@ -30,24 +30,26 @@ function listProducts() {
 	inquirer.prompt([{
 		name: "commands",
 		type: "list",
-		message: "What would you like?",
+		message: "Would you like to ?",
 		choices: ["View Available Products", "Exit"]
 	}]).then(function(select){
 		if(select.commands === "View Available Products") {
 			
 			var query = "SELECT item_id, product_name, price FROM products";
-			console.log("\nProducts Available: " + "\n---------------------------");
+			console.log("\nProducts Available: " + "\n-----------------------------------------");
 			connection.query(query, function(err, results, fields){
 				if(err) throw err;
 				if(results) {
 					for (var i = 0; i < results.length; i++){
 						console.log("#" + results[i].item_id + "\tProduct: " + results[i].product_name + "\tPrice: $" + results[i].price);
 					}
-					console.log("--------------------------");
+					console.log("-----------------------------------------------------");
+					nextAction();
 				}
-				nextAction();
+				
 			});
 		} else if(select.commands === "Exit") {
+			console.log("Have a good day!");
 			process.exit();
 		}
 	});
@@ -63,9 +65,26 @@ function nextAction() {
 		if(agree.action === "Purchase"){
 			purchaseProduct();
 		}else if(agree.action === "Exit") {
+			console.log("Have a good day!");
 			process.exit();
 		}
 	});
+}
+
+function continueShopping() {
+	inquirer.prompt([{
+		name: "continueToShop",
+		type: "list",
+		message: "Continue Shopping?",
+		choices: ["Continue", "Exit"]
+	}]).then(function(decide) {
+		if(decide.continueToShop === "Continue") {
+			listProducts();
+		} else {
+			console.log("Have a good day!");
+			process.exit();
+		}
+	})
 }
 
 function purchaseProduct() {
@@ -87,9 +106,10 @@ function purchaseProduct() {
 				nextAction();
 			} else {
 				connection.query("UPDATE products SET stock_quantity= stock_quantity - ? WHERE item_id = ?", [response.quantity, response.item], function(err, result){
-					console.log("Total cost is: $" + total);
-					console.log("---------------");
-					nextAction();
+					console.log("\n-----------------------------------------------------------------");
+					console.log("Your total is: $" + total);
+					console.log("-----------------------------------------------------------------");
+					continueShopping();
 				});
 			}
 		});
