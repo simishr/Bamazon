@@ -13,6 +13,7 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err;
+    console.log("Welcome to Bamazon..");
     startManagerView();
 });
 
@@ -21,8 +22,7 @@ function startManagerView(){
 		name: "managerName",
 		type: "input",
 		message: "Please enter your username:"
-	},
-	{
+	}, {
 		name:"managerPassword",
 		type: "input",
 		message: "Please enter your password:"
@@ -34,7 +34,7 @@ function startManagerView(){
 			if(err) throw err;
 
 			if(data === password) {
-				console.log("Welcome " + manager);
+				console.log("Hello " + manager + "!");
 				displayOptions();
 			} else {
 				console.log("Log in error. Please try again!");
@@ -48,7 +48,7 @@ function displayOptions() {
 		name: "options",
 		type: "rawlist",
 		message: "What would you like to do?",
-		choices: ["View products for sale", "View low inventory", "Add to inventory", "Add new product"]
+		choices: ["View products for sale", "View low inventory", "Add to inventory", "Add new product", "Exit"]
 	}]).then(function (optionChosen) {
 
 		var option = optionChosen.options;
@@ -74,8 +74,25 @@ function displayOptions() {
 				addNewProduct();
 				break;
 			}
+			case "Exit":
+				process.exit();
 		}
 	})
+}
+
+function nextAction() {
+	inquirer.prompt([{
+		name: "action",
+		type: "list",
+		message: "What would you like to do next?",
+		choices: ["Main menu", "Exit"]
+	}]).then(function(agree){
+		if(agree.action === "Main menu"){
+			displayOptions();
+		}else if(agree.action === "Exit") {
+			process.exit();
+		}
+	});
 }
 
 function displayProducts() {
@@ -89,8 +106,9 @@ function displayProducts() {
 							"\tPrice: $" + results[i].price + "\t Stock: " + results[i].stock_quantity);
 					}
 					console.log("-------------------------------------------------------------------------------------");
+					nextAction();
 				}
-				//nextAction();
+				
 			});
 }
 
@@ -105,8 +123,9 @@ function viewLowInventory() {
 							"\tPrice: $" + results[i].price + "\t Stock: " + results[i].stock_quantity);
 					}
 					console.log("---------------------------------------------------------------------------------------");
+					nextAction();
 				}
-				//nextAction();
+				
 			});
 }
 
@@ -115,31 +134,74 @@ function addToInventory() {
 		name: "itemID",
 		type: "input",
 		message: "Enter product ID to add Inventory quantity"
-	},
-	{
+	}, {
 		name: "quantity",
 		type: "input",
 		message: "Enter the quantity to be added."
 	}
-	]).then(function(response) {
+	]).then(function(choice) {
+		var item = choice.itemID;
+		var quantity = parseInt(choice.quantity);
+		
+		var query = "SELECT stock_quantity FROM products WHERE item_id = ?";
 
-		var query = "UPDATE products SET stock_quantity =" + "stock_quantity + ? WHERE item_id =?",
-			[response.quantity, response.itemID];
-	})
-
-	
-				console.log("\nInventory added: " + "\n-------------------------------------------------------------");
-				connection.query(query, function(err, results){
+		connection.query(query,[item], function(err, results){
 				if(err) throw err;
-				if(results) {
-					console.log("Inventory Updated!");
-					console.log("---------------------------------------------------------------------------------------");
-				}
-				//nextAction();
-			});
+			var updatedQuantity = parseInt(results[0].stock_quantity) + quantity;
+			connection.query("UPDATE products SET ? WHERE ?", [{ stock_quantity: updatedQuantity }, { item_id: item }], function(err, result){
+				console.log("\n---------------------------------------------------------------------------------------");
+				console.log("Inventory successfully updated!");
+				console.log("---------------------------------------------------------------------------------------");
+				nextAction();
+			})
+
+		})
+	});
 }
+
 function addNewProduct() {
-	// Add New Product -- add new row "insert into"
+
+	inquirer.prompt([{
+		name: "itemID",
+		type: "input",
+		message: "Enter the product ID to add a new product row"
+	}, {
+		name: "productName",
+		type: "input",
+		message: "Enter the product name"
+	},{
+		name: "departmentName",
+		type: "input",
+		message: "Enter the department"
+	}, {
+		name: "price",
+		type: "input",
+		message: "Enter the price"
+	}, {
+		name: "stockQuantity",
+		type: "input",
+		message: "Enter the quantity"
+	}]).then(function(addition) {
+
+		var item_id = addition.itemID;
+		var name = addition.productName;
+		var department = addition.departmentName;
+		var price = addition.price;
+		var quantity = addition.stockQuantity;
+
+		var query = "INSERT INTO products(item_id, product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?, ?)";
+		
+		connection.query(query,[item_id, name, department, price, quantity], function(err, results){
+			if(err) throw err;
+			if(results) {
+				console.log("\n---------------------------------------------------------------------------------------");
+				console.log("New product added successfully!");
+				console.log("---------------------------------------------------------------------------------------");
+				nextAction();
+			}
+		})
+		
+	})
 }
 
 

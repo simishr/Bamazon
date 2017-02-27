@@ -11,6 +11,7 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err;
+    console.log("Welcome to Bamazon..");
     startBamazon();
 });
 
@@ -20,7 +21,7 @@ function startBamazon() {
 		type: "input",
 		message: "Enter your name"
 	}]).then(function(response){
-		console.log("Welcome to Bamazon " + response.name);
+		console.log("Hello " + response.name + "!");
 		listProducts();
 	})
 }
@@ -56,7 +57,7 @@ function nextAction() {
 	inquirer.prompt([{
 		name: "action",
 		type: "list",
-		message: "Would you like to purchase now?",
+		message: "Start Shopping?",
 		choices: ["Purchase", "Exit"]
 	}]).then(function(agree){
 		if(agree.action === "Purchase"){
