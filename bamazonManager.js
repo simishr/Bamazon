@@ -46,7 +46,7 @@ function startManagerView(){
 function displayOptions() {
 	inquirer.prompt([{
 		name: "options",
-		type: "rawlist",
+		type: "list",
 		message: "What would you like to do?",
 		choices: ["View products for sale", "View low inventory", "Add to inventory", "Add new product", "Exit"]
 	}]).then(function (optionChosen) {
